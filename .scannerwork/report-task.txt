@@ -1,0 +1,6 @@
+projectKey=PACMAN
+serverUrl=http://localhost:9000
+serverVersion=25.3.0.104237
+dashboardUrl=http://localhost:9000/dashboard?id=PACMAN
+ceTaskId=2a286f13-e5a1-48b4-80d9-d947a4c3d378
+ceTaskUrl=http://localhost:9000/api/ce/task?id=2a286f13-e5a1-48b4-80d9-d947a4c3d378
