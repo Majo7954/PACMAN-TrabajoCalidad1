@@ -105,26 +105,29 @@ let GF = function () {
 			this.nearestRow = parseInt((this.y + thisGame.TILE_HEIGHT / 2) / thisGame.TILE_HEIGHT);
 			this.nearestCol = parseInt((this.x + thisGame.TILE_WIDTH / 2) / thisGame.TILE_WIDTH);
 
+			
 			if (this.state !== Ghost.SPECTACLES) {
 
 				let posiblesMovimientos = [[0, -this.speed], [this.speed, 0], [0, this.speed], [-this.speed, 0]];
 				let soluciones = [];
-
-				for (let i = 0; i < posiblesMovimientos.length; i++) {
-					if (!thisLevel.checkIfHitWall(this.x + posiblesMovimientos[i][0], this.y + posiblesMovimientos[i][1], this.nearestRow, this.nearestCol))
-						soluciones.push(posiblesMovimientos[i]);
+			
+				for (const movimiento of posiblesMovimientos) {
+					if (!thisLevel.checkIfHitWall(this.x + movimiento[0], this.y + movimiento[1], this.nearestRow, this.nearestCol)) {
+						soluciones.push(movimiento);
+					}
 				}
-
+			
 				if (thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol) || soluciones.length === 3) {
-					let pos = Math.round(Math.random() * (soluciones.length - 1));
-					this.velX = soluciones[pos][0];
-					this.velY = soluciones[pos][1];
-				} else
+					let pos = Math.floor(Math.random() * soluciones.length);
+					[this.velX, this.velY] = soluciones[pos];
+				} else {
 					thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
+				}
+			
 				this.x += this.velX;
 				this.y += this.velY;
-
-			} else {
+			}
+			else {
 				if(this.x < this.homeX) this.x += this.speed;
 				if(this.x > this.homeX) this.x -= this.speed;
 				if(this.y < this.homeY) this.y += this.speed;
