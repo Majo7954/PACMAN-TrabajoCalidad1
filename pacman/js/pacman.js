@@ -529,10 +529,11 @@ let GF = function () {
 	let clearCanvas = function () {
 		ctx.clearRect(0, 0, w, h);
 	};
-
+	
 	let checkInputs = function () {
-		var fila = Math.trunc(player.y / thisGame.TILE_HEIGHT);
-        var colum = Math.trunc(player.x / thisGame.TILE_WIDTH);
+		let fila = Math.trunc(player.y / thisGame.TILE_HEIGHT);
+		let colum = Math.trunc(player.x / thisGame.TILE_WIDTH);
+	
 		if (inputStates.left) {
 			// Si no ha chocado con nada, cambiar los valores para que se desplace a la izquierda
 			if (!thisLevel.checkIfHitWall(player.x - (thisGame.TILE_WIDTH / 2) - 1, player.y, fila, colum)) {
@@ -541,7 +542,6 @@ let GF = function () {
 				player.velX = -player.speed;
 				inputStates.up = false;
 				inputStates.down = false;
-				inputStates.right = false;
 			}
 
 		} else if (inputStates.up) {
