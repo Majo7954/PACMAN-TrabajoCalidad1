@@ -1,268 +1,254 @@
-// Variables globales de utilidad
-var canvas = document.querySelector("canvas");
-var ctx = canvas.getContext("2d");
-var w = canvas.width;
-var h = canvas.height;
+const canvas = document.querySelector("canvas");
+const ctx = canvas.getContext("2d");
+const w = canvas.width;
+const h = canvas.height;
 
+function drawCharacter(ctx, x, y, width, height, color) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + height);
+    ctx.quadraticCurveTo(x + (width / 2), y / 1, x + width, y + height);
+    ctx.fillStyle = color;
+    ctx.closePath();
+    ctx.fill();
+}
 
-// GAME FRAMEWORK 
-var GF = function(){
-	// variables para contar frames/s, usadas por measureFPS
-  var frameCount = 0;
-  var lastTime;
-  var fpsContainer;
-  var fps; 
- 
-	//  variable global temporalmente para poder testear el ejercicio
-    inputStates = { left: false, up: false, right: false, down: false, space: false };
+function moveCharacter(character, speed, checkCollisionFn) {
+    character.nearestRow = Math.floor((character.y + character.radius) / thisGame.TILE_HEIGHT);
+    character.nearestCol = Math.floor((character.x + character.radius) / thisGame.TILE_WIDTH);
 
-	var Level = function(ctx) {
-		this.ctx = ctx;
-		this.lvlWidth = 0;
-		this.lvlHeight = 0;
-		
-		this.map = [];
-		
-		this.pellets = 0;
-		this.powerPelletBlinkTimer = 0;
+    if (!checkCollisionFn(character)) {
+        character.x += character.velX;
+        character.y += character.velY;
+    } else {
+        character.velX = 0;
+        character.velY = 0;
+    }
+}
 
-		this.setMapTile = function(row, col, newValue){
-			this.map[row][col] = newValue;
-		};
+function handleMovementInput(inputStates, character) {
+    if (inputStates.right) {
+        character.velY = 0;
+        character.velX = character.speed;
+    } else if (inputStates.left) {
+        character.velY = 0;
+        character.velX = -character.speed;
+    } else if (inputStates.up) {
+        character.velY = -character.speed;
+        character.velX = 0;
+    } else if (inputStates.down) {
+        character.velY = character.speed;
+        character.velX = 0;
+    } else {
+        character.velX = 0;
+        character.velY = 0;
+    }
+}
 
-		this.getMapTile = function(row, col){
-			return this.map[row][col];
-		};
+function measureFPS(newTime) {
+    if (lastTime === undefined) {
+        lastTime = newTime;
+        return;
+    }
 
-		this.printMap = function(){
-			for (var i = 0; i < thisLevel.lvlHeight; i++) {
-				var current = '';
-				for (var j = 0; j < thisLevel.lvlWidth; j++) {
-					current += thisLevel.getMapTile(i,j) + ' ';
-				}
-				console.log(current)
-			}
-		};
+    const diffTime = newTime - lastTime;
+    if (diffTime >= 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastTime = newTime;
+    }
+    fpsContainer.innerHTML = 'FPS: ' + fps;
+    frameCount++;
+}
 
-		this.loadLevel = function(){
-			jQuery.ajax({
-				url : "https://raw.githubusercontent.com/AinhoY/froga/main/1.txt",
-		        dataType: "text",
-		        success : function (data) {
-		            var lineas = data.split("\n");
-		            var inicio = fin = false;
-		            var row = 0;
-		            for (var i = 0; i < lineas.length; i++) {
-		            	if(lineas[i].includes("lvlwidth"))
-		            		thisLevel.lvlWidth = lineas[i].split(" ").slice(-1).pop();
+var GF = function() {
+    var frameCount = 0;
+    var lastTime;
+    var fpsContainer;
+    var fps;
+    var inputStates = { left: false, up: false, right: false, down: false, space: false };
 
-		            	else if(lineas[i].includes("lvlheight"))
-		            		thisLevel.lvlHeight = lineas[i].split(" ").slice(-1).pop();
+    const TILE_WIDTH = 24, TILE_HEIGHT = 24;
+    const numGhosts = 4;
+    const ghostColors = {
+        0: "rgba(255, 0, 0, 255)",
+        1: "rgba(255, 128, 255, 255)",
+        2: "rgba(128, 255, 255, 255)",
+        3: "rgba(255, 128, 0, 255)",
+        4: "rgba(50, 50, 255, 255)", 
+        5: "rgba(255, 255, 255, 255)" 
+    };
 
-		            	else if(lineas[i].includes("startleveldata"))
-		            		inicio = true;
+    function createCharacter(id = null) {
+        return {
+            x: 0,
+            y: 0,
+            velX: 0,
+            velY: 0,
+            speed: 5,
+            radius: id !== null ? 15 : 20,
+            nearestRow: 0,
+            nearestCol: 0,
+            ctx: ctx,
+            id: id,
+            homeX: 0,
+            homeY: 0,
 
-		            	else if(lineas[i].includes("endleveldata"))
-		            		fin = true;
+            draw() {
+                const color = id !== null ? ghostColors[this.id] : '#FFFF00'; 
+                drawCharacter(this.ctx, this.x, this.y, TILE_WIDTH, TILE_HEIGHT, color);
 
-		            	else if(inicio && !fin) {
-		            		var fila = lineas[i].split(" ");
-		            		for (var j = 0; j < fila.length; j++) {
-							    if(fila[j] != "") {
-							    	if(thisLevel.map[row] === undefined)
-							    		thisLevel.map[row] = [];
-							    	thisLevel.setMapTile(row,j,fila[j]);
-							    }
-							}
-		            		row++;
-		            	}
+                if (id !== null) {
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.x + (TILE_WIDTH / 4), this.y + (TILE_WIDTH / 2), 4, 0, 2 * Math.PI, true);
+                    this.ctx.fill();
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.x + (2 * TILE_WIDTH / 4), this.y + (TILE_WIDTH / 2), 4, 0, 4 * Math.PI, true);
+                    this.ctx.fill();
+                }
+            },
 
-		            }
-		        }
-    		});
-		};
+            move() {
+                this.nearestRow = Math.floor((this.y + thisGame.TILE_HEIGHT / 2) / thisGame.TILE_HEIGHT);
+                this.nearestCol = Math.floor((this.x + thisGame.TILE_WIDTH / 2) / thisGame.TILE_WIDTH);
 
+                const posiblesMovimientos = [[0,-this.speed], [this.speed, 0], [0, this.speed], [-this.speed, 0]];
+                let soluciones = [];
 
-	}; // end Level 
+                for (let i = 0; i < posiblesMovimientos.length; i++) {
+                    if (!thisLevel.checkIfHitWall(this.x + posiblesMovimientos[i][0], this.y + posiblesMovimientos[i][1], this.nearestRow, this.nearestCol)) {
+                        soluciones.push(posiblesMovimientos[i]);
+                    }
+                }
 
-	var Pacman = function() {
-		this.radius = 15;
-		this.x = 0;
-		this.y = 0;
-		this.speed = 5;
-		this.angle1 = 0.25;
-		this.angle2 = 1.75;
-	};
-	Pacman.prototype.move = function() {
-		if(inputStates.right) {
-			if(this.x + this.radius*2 + this.velX <= w) {
-			  this.x += this.velX;
-			  this.angle1 = 0.25;
-			  this.angle2 = 1.75;
-			}
-		} else if(inputStates.left) {
-			if(this.x + this.velX >= 0) {
-				this.x += this.velX;
-				this.angle1 = 1.25;
-				this.angle2 = 0.75;
-		}
-		} else if(inputStates.down) {
-			if(this.y + this.radius*2 + this.velY <= h) {
-				this.y += this.velY;
-				this.angle1 = 0.75;
-				this.angle2 = 0.25;
-		}
-		} else if(inputStates.up) {
-			if(this.y + this.velY >= 0) {
-				this.y += this.velY;
-				this.angle1 = 1.75;
-				this.angle2 = 1.25;
-		}
-		}
-	};
+                if (thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol) || soluciones.length === 3) {
+                    let pos = Math.round(Math.random() * (soluciones.length - 1));
+                    this.velX = soluciones[pos][0];
+                    this.velY = soluciones[pos][1];
+                } else {
+                    thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
+                }
+                this.x += this.velX;
+                this.y += this.velY;
+            }
+        };
+    }
 
-  // Función para pintar el Pacman
-	Pacman.prototype.draw = function(x, y) {   
-    	ctx.beginPath();
-	    ctx.moveTo(this.x + this.radius,this.y + this.radius);
-	    ctx.arc(this.x + this.radius,this.y + this.radius,this.radius,this.angle1*Math.PI,this.angle2*Math.PI,false);
-	    ctx.fillStyle = '#FFFF00';
-	    ctx.strokeStyle = 'black';
-	    ctx.closePath();
-	    ctx.fill();
-	    ctx.stroke(); 
-	};
+    const Pacman = createCharacter();
+    const ghosts = [];
+    for (let i = 0; i < numGhosts; i++) {
+        ghosts.push(createCharacter(i)); 
+    }
 
-	var player = new Pacman();
+    const thisGame = {
+        getLevelNum: function() { return 0; },
+        screenTileSize: [24, 21],
+        TILE_WIDTH: 24,
+        TILE_HEIGHT: 24
+    };
 
-	var thisGame = {
-		getLevelNum : function(){
-			return 0;
-		},
-		TILE_WIDTH: 24, 
-		TILE_HEIGHT: 24
-	};
+    const Level = function(ctx) {
+        this.ctx = ctx;
+        this.lvlWidth = 0;
+        this.lvlHeight = 0;
+        this.map = [];
+        this.pellets = 0;
+        this.powerPelletBlinkTimer = 0;
 
-	// thisLevel global para poder realizar las pruebas unitarias
-	thisLevel = new Level(canvas.getContext("2d"));
-	thisLevel.loadLevel( thisGame.getLevelNum() );
-	thisLevel.printMap(); 
+        this.setMapTile = function(row, col, newValue) {
+            if (this.map[row]) {
+                this.map[row][col] = newValue;
+            }
+        };
 
-	var measureFPS = function(newTime){
-		// la primera ejecución tiene una condición especial
-		if(lastTime === undefined) {
-			lastTime = newTime; 
-			return;
-		}
-		// calcular el delta entre el frame actual y el anterior
-		var diffTime = newTime - lastTime; 
+        this.getMapTile = function(row, col) {
+            if (this.map[row]) {
+                return this.map[row][col];
+            }
+        };
 
-		if (diffTime >= 1000) {
-			fps = frameCount;    
-			frameCount = 0;
-			lastTime = newTime;
-		}
+        this.loadLevel = function() {
+            jQuery.ajax({
+                url: "https://raw.githubusercontent.com/AinhoY/froga/main/1.txt",
+                dataType: "text",
+                success: function(data) {
+                    const lineas = data.split("\n");
+                    let inicio = false;
+                    let fin = false;
+                    let row = 0;
+                    for (let i = 0; i < lineas.length; i++) {
+                        if (lineas[i].includes("lvlwidth")) thisLevel.lvlWidth = lineas[i].split(" ").slice(-1).pop();
+                        else if (lineas[i].includes("lvlheight")) thisLevel.lvlHeight = lineas[i].split(" ").slice(-1).pop();
+                        else if (lineas[i].includes("startleveldata")) inicio = true;
+                        else if (lineas[i].includes("endleveldata")) fin = true;
+                        else if (inicio && !fin) {
+                            const fila = lineas[i].split(" ");
+                            for (let j = 0; j < fila.length; j++) {
+                                if (fila[j] !== "") {
+                                    if (!thisLevel.map[row]) thisLevel.map[row] = [];
+                                    thisLevel.setMapTile(row, j, fila[j]);
+                                }
+                            }
+                            row++;
+                        }
+                    }
+                }
+            });
+        };
+    };
 
-		// mostrar los FPS en una capa del documento
-		// que hemos construído en la función start()
-		fpsContainer.innerHTML = 'FPS: ' + fps; 
-		frameCount++;
-	};
+    const thisLevel = new Level(canvas.getContext("2d"));
+    thisLevel.loadLevel(thisGame.getLevelNum());
 
-	// clears the canvas content
-	var clearCanvas = function() {
-		ctx.clearRect(0, 0, w, h);
-	};
+    const mainLoop = function(time) {
+        measureFPS(time);
+        handleMovementInput(inputStates, Pacman);
+        clearCanvas();
+        Pacman.move();
+        Pacman.draw();
+        ghosts.forEach(ghost => {
+            ghost.move();
+            ghost.draw();
+        });
+        requestAnimationFrame(mainLoop);
+    };
 
-	var checkInputs = function(){
-		if(inputStates.right) {
-			player.velY = 0;
-			player.velX = player.speed;
-		} else if(inputStates.left) {
-			player.velY = 0;
-			player.velX = -player.speed;
-		} else if(inputStates.up) {
-			player.velY = -player.speed;
-			player.velX = 0;
-		} else if(inputStates.down) {
-			player.velY = player.speed;
-			player.velX = 0;
-		} else { // space. Parar a pacman
-			player.velX = 0;
-			player.velY = 0;
-		}
-	};
- 
-	var mainLoop = function(time){
-		//main function, called each frame 
-		measureFPS(time);   
-		checkInputs();
-    // Clear the canvas
-		clearCanvas();
-    
-		player.move();
- 
-		player.draw();
-		// call the animation loop every 1/60th of second
-		requestAnimationFrame(mainLoop);
-	};
+    const addListeners = function() {
+        window.addEventListener('keydown', (event) => {
+            const keyName = event.key;
+            inputStates.down = keyName === 'ArrowDown';
+            inputStates.left = keyName === 'ArrowLeft';
+            inputStates.right = keyName === 'ArrowRight';
+            inputStates.up = keyName === 'ArrowUp';
+            inputStates.space = keyName === ' ';
+        });
+    };
 
-	var addListeners = function(){
-		// add the listener to the main, window object, and update the states
-		window.addEventListener('keydown', (event) => {
-			const keyName = event.key;
-			if (keyName === 'ArrowDown') {
-			  inputStates.down = true;
-			} else if (keyName === 'ArrowLeft') {
-			  inputStates.left = true;
-			} else if (keyName === 'ArrowRight') {
-			  inputStates.right = true;
-			} else if (keyName === 'ArrowUp') {
-			  inputStates.up = true;
-			} else if (keyName === ' ') {
-			  inputStates.space = true;
-			} else {}
-		  }, false);
-   };
+    const start = function() {
+        fpsContainer = document.createElement('div');
+        document.body.appendChild(fpsContainer);
+        addListeners();
+        Pacman.x = 0;
+        Pacman.y = 0;
+        Pacman.velY = 0;
+        Pacman.velX = Pacman.speed;
+        requestAnimationFrame(mainLoop);
+    };
 
-
-	var start = function(){
-		// adds a div for displaying the fps value
-		fpsContainer = document.createElement('div');
-		document.body.appendChild(fpsContainer);
-       
-		addListeners();
-
-		player.x = 0;
-		player.y = 0; 
-		player.velY = 0;
-		player.velX = player.speed;
- 
-		// start the animation
-		requestAnimationFrame(mainLoop);
-	};
-
-	//our GameFramework returns a public API visible from outside its scope
-	return {
-		start: start
-	};
+    return { start: start };
 };
 
-var game = new GF();
+const game = new GF();
 game.start();
 
-
 test('Mapa correctamente cargado', function(assert) {
-
-  	var done = assert.async();
-  	setTimeout(function() {
-			// console.log(player.x);
- 		   assert.ok( thisLevel.getMapTile(0,9) == 113, "Line 0, Column 9: wall");
- 		   assert.ok( thisLevel.getMapTile(24,20) == 106, "Line 24, Column 21: wall");
- 		   assert.ok( thisLevel.getMapTile(23,1) == 2, "Line 23, Column 1 : pellet");
- 		   assert.ok( thisLevel.getMapTile(22,1) == 3, "Line 22, Column 1: power pellet");
-
-    		   done();
-  }, 1000);
-
+    const done = assert.async();
+    setTimeout(function() {
+        assert.ok(thisLevel.getMapTile(0, 9) == 113, "Line 0, Column 9: wall");
+        assert.ok(thisLevel.getMapTile(24, 20) == 106, "Line 24, Column 21: wall");
+        assert.ok(thisLevel.getMapTile(23, 1) == 2, "Line 23, Column 1 : pellet");
+        assert.ok(thisLevel.getMapTile(22, 1) == 3, "Line 22, Column 1: power pellet");
+        done();
+    }, 1000);
 });
+
