@@ -326,14 +326,13 @@ let GF = function () {
 								thisLevel.pellets--;
 								console.log(thisLevel.pellets);
 								thisGame.addToScore(puntos_comer_pildora);
-								// let sound_eat_pellet = new Audio('../res/sounds/pacman_eatpill.wav');
-								thisGame.sound_eat_pellet.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
-								if (thisLevel.pellets == 0) {
+								thisGame.sound_eat_pellet.play(); 
+							
+								if (thisLevel.pellets === 0) {
 									console.log("Has ganado");
 									thisGame.setMode(thisGame.WIN);
-									// let sound_win = new Audio('../res/sounds/pacman_beginning.wav');
-									thisGame.sound_win.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
-								}
+									thisGame.sound_win.play();
+								} 
 							} else if (valor === tileID['pellet-power']) {
 								thisLevel.setMapTile(r, c, 0);
 								// let sound_eat_pellet = new Audio('../res/sounds/pacman_eatfruit.wav');
