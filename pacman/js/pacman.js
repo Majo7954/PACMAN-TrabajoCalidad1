@@ -388,47 +388,53 @@ let GF = function () {
 	};
 
 	Pacman.prototype.move = function () {
-		this.nearestRow = parseInt((this.y) / thisGame.TILE_HEIGHT);
-		this.nearestCol = parseInt((this.x) / thisGame.TILE_WIDTH);
+    this.nearestRow = Math.trunc(this.y / thisGame.TILE_HEIGHT);
+    this.nearestCol = Math.trunc(this.x / thisGame.TILE_WIDTH);
 
-		if (!thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol)) {
-			thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
-			for (let i = 0; i < numGhosts; i++) {
-				if (thisLevel.checkIfHit(this.x, this.y, ghosts[i].x, ghosts[i].y, thisGame.TILE_WIDTH / 2)) {
-					if (ghosts[i].state === Ghost.VULNERABLE) {
-						ghosts[i].velX = ghosts[i].velY = 0;
-						ghosts[i].state = Ghost.SPECTACLES;
-						thisGame.addToScore(comer_fantasmas);
+    if (thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol)) {
+        this.velX = 0;
+        this.velY = 0;
+        return;
+    }
 
-						// let sound_eat_ghost = new Audio('../res/sounds/pacman_eatghost.wav');
-						thisGame.sound_eat_ghost.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
+    thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
+    this.checkCollisionWithGhosts();
 
-					} else if (ghosts[i].state === Ghost.NORMAL){
-						thisGame.lives--; // Quitamos una vida
-						if (thisGame.lives > 0) {
-							// let sound_die = new Audio('../res/sounds/pacman_death.wav');
-							thisGame.sound_die.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
+    this.x += this.velX;
+    this.y += this.velY;
+};
 
-							thisGame.setMode(thisGame.HIT_GHOST);
-						} else {
-							// let sound_lose = new Audio('../res/sounds/pacman_intermission.wav');
-							thisGame.sound_lose.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
+Pacman.prototype.checkCollisionWithGhosts = function () {
+    for (let ghost of ghosts) {
+        if (!thisLevel.checkIfHit(this.x, this.y, ghost.x, ghost.y, thisGame.TILE_WIDTH / 2)) continue;
 
-							thisGame.lives = 0;
-							thisGame.setMode(thisGame.GAME_OVER);
-						}
-					}
-				}
-			}
-			this.x += this.velX;
-			this.y += this.velY;
-		} else {
-			this.velX = 0;
-			this.velY = 0;
-		}
-		//thisLevel.checkIfHitSomething(this.x, this.y, this.nearestRow, this.nearestCol);
+        if (ghost.state === Ghost.VULNERABLE) {
+            this.handleGhostEaten(ghost);
+        } else if (ghost.state === Ghost.NORMAL) {
+            this.handlePacmanHit();
+        }
+    }
+};
 
-	};
+Pacman.prototype.handleGhostEaten = function (ghost) {
+    ghost.velX = 0;
+    ghost.velY = 0;
+    ghost.state = Ghost.SPECTACLES;
+    thisGame.addToScore(comer_fantasmas);
+    thisGame.sound_eat_ghost.play(); // Si falla, descomentar arriba y borrar la declaración en la línea 470 aprox.
+};
+
+Pacman.prototype.handlePacmanHit = function () {
+    thisGame.lives--;
+    if (thisGame.lives > 0) {
+        thisGame.sound_die.play();
+        thisGame.setMode(thisGame.HIT_GHOST);
+    } else {
+        thisGame.sound_lose.play();
+        thisGame.lives = 0;
+        thisGame.setMode(thisGame.GAME_OVER);
+    }
+};
 
 	// Función para pintar el Pacman
 	Pacman.prototype.draw = function () {
