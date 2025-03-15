@@ -3,10 +3,9 @@ let canvas = document.querySelector("canvas");
 let ctx = canvas.getContext("2d");
 let w = canvas.width;
 let h = canvas.height;
-var oldDirecrion = "right"; // Esta variable nos permitirá en caso de que Pacman quisiera cambiar de dirección y que no se pueda, seguir por la misma dirección
-// Se ha inicializado a right, porque pacman empieza moviendose hacia la derecha
+let oldDirection = "right"; // Se ha inicializado a "right" porque Pacman empieza moviéndose hacia la derecha
 
-// Incializar las variables de las puntuaciones
+// Inicializar las variables de las puntuaciones
 let puntos_comer_pildora = 10;
 let comer_fantasmas = 100;
 
