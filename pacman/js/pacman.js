@@ -584,49 +584,29 @@ let GF = function () {
 	};
 
 	let updateTimers = function () {
-		/*if (thisGame.ghostTimer > 1) {
-            thisGame.ghostTimer -= 1;
-        } else if (thisGame.ghostTimer == 1) {
-            thisGame.ghostTimer = 0;
-            /*for (let ghost in ghosts) {
-                ghost.state = Ghost.NORMAL; }
-            Mismo warning de antes: Value assigned to primitive will be lost, y no funciona */
-		/*for (let i = 0; i < numGhosts; i++) {
-            ghosts[i].state = Ghost.NORMAL;
-        }
-    }*/
-
-		let vulnerables = false;
-		for (let i = 0; i < numGhosts; i++) {
-			if(ghosts[i].state === Ghost.VULNERABLE) vulnerables = true;
-		}
-
-		if(vulnerables) {
-			if(thisGame.ghostTimer > 0) {
-				thisGame.ghostTimer--;
-			} else {
-				for (let i = 0; i < numGhosts; i++){
-					if(ghosts[i].state !== Ghost.SPECTACLES) { // Si pacman se ha comido al fantasma, primero tiene que volver a casa
-						ghosts[i].state = Ghost.NORMAL;
-					}
+		let vulnerables = ghosts.some(ghost => ghost.state === Ghost.VULNERABLE);
+	
+		if (vulnerables && thisGame.ghostTimer > 0) {
+			thisGame.ghostTimer--;
+		} else if (vulnerables && thisGame.ghostTimer === 0) {
+			ghosts.forEach(ghost => {
+				if (ghost.state !== Ghost.SPECTACLES) {
+					ghost.state = Ghost.NORMAL;
 				}
-			}
+			});
 		}
-
-
-		if(thisGame.mode === thisGame.HIT_GHOST) {
-			thisGame.modeTimer++;
-			if(thisGame.modeTimer >= 90) {
+	
+		handleGameMode();
+	};
+	
+	let handleGameMode = function () {
+		if (thisGame.mode === thisGame.HIT_GHOST) {
+			if (++thisGame.modeTimer >= 90) {
 				thisGame.setMode(thisGame.WAIT_TO_START);
 				reset();
 			}
-		}
-
-		if(thisGame.mode === thisGame.WAIT_TO_START) {
-			thisGame.modeTimer++;
-			if(thisGame.modeTimer >= 30) {
-				thisGame.setMode(thisGame.NORMAL);
-			}
+		} else if (thisGame.mode === thisGame.WAIT_TO_START && ++thisGame.modeTimer >= 30) {
+			thisGame.setMode(thisGame.NORMAL);
 		}
 	};
 
