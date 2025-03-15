@@ -616,71 +616,63 @@ Pacman.prototype.handlePacmanHit = function () {
 		}
 	};
 
-	let mainLoop = function(time) {
-
-		// Cuando el juego esté en marcha
-		if (thisGame.mode !== thisGame.GAME_OVER && thisGame.mode !== thisGame.WIN && thisGame.mode !== thisGame.PAUSE) {
-
+	let mainLoop = function (time) {
+		if (isGameRunning()) {
 			measureFPS(time);
-
-			// En caso de que no haya pasado nada
-			if (thisGame.mode === thisGame.NORMAL) {
-				checkInputs();
-
-				// Mover fantasmas
-				for (let i = 0; i < numGhosts; i++) {
-					ghosts[i].move();
-				}
-
-				player.move();
-			}
-
-			// Pacman ha chocado con los fantasmas
-			if (thisGame.mode === thisGame.HIT_GHOST) {
-				if (thisGame.modeTimer == 90) {
-					thisGame.mode = thisGame.WAIT_TO_START;
-				}
-			}
-
-			// en modo WAIT_TO_START
-			if (thisGame.mode === thisGame.WAIT_TO_START) {
-				reset();
-				if (thisGame.modeTimer == 30) {
-					requestAnimationFrame(mainLoop);
-				}
-			}
-
-			// Clear the canvas
-			clearCanvas();
-
-			thisLevel.drawMap();
-
-			// Pintar fantasmas
-			for (let i = 0; i < numGhosts; i++) {
-				ghosts[i].draw();
-			}
-
-			player.draw();
-
-			updateTimers();
-			// call the animation loop every 1/60th of second
+			updateGame();
+			renderGame();
 			requestAnimationFrame(mainLoop);
-
-		} else if (thisGame.mode === thisGame.GAME_OVER || thisGame.mode === thisGame.WIN) { // En caso de que el juego haya terminado
-
-			// Clear the canvas
-			clearCanvas();
-
-			thisLevel.drawMap();
-
-			// Pintar fantasmas
-			for (let i = 0; i < numGhosts; i++) {
-				ghosts[i].draw();
-			}
-
-			player.draw();
-
+		} else {
+			endGame();
 		}
+	};
+	
+	function isGameRunning() {
+		return thisGame.mode !== thisGame.GAME_OVER && 
+			   thisGame.mode !== thisGame.WIN && 
+			   thisGame.mode !== thisGame.PAUSE;
+	}
+	
+	function updateGame() {
+		if (thisGame.mode === thisGame.NORMAL) {
+			checkInputs();
+			moveGhosts();
+			player.move();
+		} else if (thisGame.mode === thisGame.HIT_GHOST && thisGame.modeTimer === 90) {
+			thisGame.mode = thisGame.WAIT_TO_START;
+		} else if (thisGame.mode === thisGame.WAIT_TO_START) {
+			reset();
+			if (thisGame.modeTimer === 30) {
+				requestAnimationFrame(mainLoop);
+			}
+		}
+		updateTimers();
+	}
+	
+	function moveGhosts() {
+		for (let ghost of ghosts) {
+			ghost.move();
+		}
+	}
+	
+	function renderGame() {
+		clearCanvas();
+		thisLevel.drawMap();
+		drawGhosts();
+		player.draw();
+	}
+	
+	function drawGhosts() {
+		for (let ghost of ghosts) {
+			ghost.draw();
+		}
+	}
+	
+	function endGame() {
+		clearCanvas();
+		thisLevel.drawMap();
+		drawGhosts();
+		player.draw();
 	}
 
 	let addListeners = function () {
