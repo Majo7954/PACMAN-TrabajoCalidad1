@@ -1,9 +1,29 @@
+/*!
+ * jQuery JavaScript Library v3.3.1
+ * https://jquery.com/
+ *
+ * Includes Sizzle.js
+ * https://sizzlejs.com/
+ *
+ * Copyright JS Foundation and other contributors
+ * Released under the MIT license
+ * https://jquery.org/license
+ *
+ * Date: 2018-01-20T17:24Z
+ */
 ( function( global, factory ) {
 
 	"use strict";
 
 	if ( typeof module === "object" && typeof module.exports === "object" ) {
 
+		// For CommonJS and CommonJS-like environments where a proper `window`
+		// is present, execute the factory and get jQuery.
+		// For environments that do not have a `window` with a `document`
+		// (such as Node.js), expose a factory as module.exports.
+		// This accentuates the need for the creation of a real `window`.
+		// e.g. var jQuery = require("jquery")(window);
+		// See ticket #14549 for more info.
 		module.exports = global.document ?
 			factory( global, true ) :
 			function( w ) {
@@ -16,8 +36,13 @@
 		factory( global );
 	}
 
+// Pass this if window is not defined yet
 } )( typeof window !== "undefined" ? window : this, function( window, noGlobal ) {
 
+// Edge <= 12 - 13+, Firefox <=18 - 45+, IE 10 - 11, Safari 5.1 - 9+, iOS 6 - 9.1
+// throw exceptions when non-strict code (e.g., ASP.NET 4.5) accesses strict mode
+// arguments.callee.caller (trac-13335). But as of jQuery 3.0 (2016), strict mode should be common
+// enough that all such attempts are guarded in a try block.
 "use strict";
 
 const arr = [];
@@ -47,6 +72,10 @@ const ObjectFunctionString = fnToString.call(Object);
 const support = {};
 
 const isFunction = function isFunction(obj) {
+  // Support: Chrome <=57, Firefox <=52
+  // In some browsers, typeof returns "function" for HTML <object> elements
+  // (i.e., `typeof document.createElement( "object" ) === "function"`).
+  // We don't want to classify *any* DOM node as a function.
   return typeof obj === "function" && typeof obj.nodeType !== "number";
 };
 
@@ -87,16 +116,24 @@ function toType(obj) {
     class2type[toString.call(obj)] || "object" :
     typeof obj;
 }
+/* global Symbol */
+// Defining this global in .eslintrc.json would create a danger of using the global
+// unguarded in another place, it seems safer to define global only for this module
 
 const version = "3.3.1";
 
 // Define a local copy of jQuery
 const jQuery = function( selector, context ) {
 
+  // The jQuery object is actually just the init constructor 'enhanced'
+  // Need init if jQuery is called (just allow error to be thrown if not included)
   return new jQuery.fn.init( selector, context );
 };
 
+// Support: Android <=4.0 only
+// Make sure we trim BOM and NBSP
 const rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+
 
 jQuery.fn = jQuery.prototype = {
 
@@ -551,32 +588,34 @@ const Sizzle =
       ")\\)|)",
 
     // Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
-    rwhitespace = new RegExp( whitespace + "+", "g" ),
-    rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
+	rwhitespace = new RegExp( whitespace + "+", "g" ),
+	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
 
-    rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
-    rcombinators = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*" ),
+	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
+	rcombinators = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*" ),
 
-    rattributeQuotes = new RegExp( "=" + whitespace + "*([^\\]'\"]*?)" + whitespace + "*\\]", "g" ),
+	rattributeQuotes = new RegExp( "=" + whitespace + "*([^\\]'\"]*?)" + whitespace + "*\\]", "g" ),
 
-    rpseudo = new RegExp( pseudos ),
-    ridentifier = new RegExp( "^" + identifier + "$" ),
+	rpseudo = new RegExp( pseudos ),
+	ridentifier = new RegExp( "^" + identifier + "$" ),
+
 
     matchExpr = {
-      "ID": new RegExp( "^#(" + identifier + ")" ),
-      "CLASS": new RegExp( "^\\.(" + identifier + ")" ),
-      "TAG": new RegExp( "^(" + identifier + "|[*])" ),
-      "ATTR": new RegExp( "^" + attributes ),
-      "PSEUDO": new RegExp( "^" + pseudos ),
-      "CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" + whitespace +
-        "*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" + whitespace +
-        "*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
-      "bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
-      // For use in libraries implementing .is()
-      // We use this for POS matching in `select`
-      "needsContext": new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" +
-        whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
-    },
+		"ID": new RegExp( "^#(" + identifier + ")" ),
+		"CLASS": new RegExp( "^\\.(" + identifier + ")" ),
+		"TAG": new RegExp( "^(" + identifier + "|[*])" ),
+		"ATTR": new RegExp( "^" + attributes ),
+		"PSEUDO": new RegExp( "^" + pseudos ),
+		"CHILD": new RegExp( "^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\(" + whitespace +
+		  "*(even|odd|(([+-]|)(\\d*)n|)" + whitespace + "*(?:([+-]|)" + whitespace +
+		  "*(\\d+)|))" + whitespace + "*\\)|)", "i" ),
+		"bool": new RegExp( "^(?:" + booleans + ")$", "i" ),
+		// For use in libraries implementing .is()
+		// We use this for POS matching in `select`
+		"needsContext": new RegExp( "^" + whitespace + "*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\(" +
+		  whitespace + "*((?:-\\d)?\\d*)" + whitespace + "*\\)|)(?=[^-]|$)", "i" )
+	  },
+	  
 
     rinputs = /^(?:input|select|textarea|button)$/i,
     rheader = /^h\d$/i,
@@ -4811,16 +4850,16 @@ var documentElement = document.documentElement;
 
 
 var
-	rkeyEvent = /^key/,
-	rmouseEvent = /^(?:mouse|pointer|contextmenu|drag|drop)|click/,
-	rtypenamespace = /^([^.]*)(?:\.(.+)|)/;
+  rkeyEvent = /^key/,
+  rmouseEvent = /^(?:mouse|pointer|contextmenu|drag|drop|click)/,
+  rtypenamespace = /^([^.]*)(?:\.(.+)|)/;
 
 function returnTrue() {
-	return true;
+  return true;
 }
 
 function returnFalse() {
-	return false;
+  return false;
 }
 
 // Support: IE <=9 only
@@ -5555,7 +5594,8 @@ var
 	rnoInnerhtml = /<script|<style|<link/i,
 
 	// checked="checked" or checked
-	rchecked = /checked\s*(?:[^=]|=\s*.checked.)/i,
+	rchecked = /checked\s*(?:[^=]|=\s*[^=]*checked)/i,
+
 	rcleanScript = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g;
 
 // Prefer a tbody over its parent table for containing new rows
@@ -10188,13 +10228,17 @@ jQuery.fn.extend( {
 	},
 	undelegate: function( selector, types, fn ) {
 
-
+		// ( namespace ) or ( selector, types [, fn] )
 		return arguments.length === 1 ?
 			this.off( selector, "**" ) :
 			this.off( types, selector || "**", fn );
 	}
 } );
 
+// Bind a function to a context, optionally partially applying any
+// arguments.
+// jQuery.proxy is deprecated to promote standards (specifically Function#bind)
+// However, it is not slated for removal any time soon
 jQuery.proxy = function( fn, context ) {
 	var tmp, args, proxy;
 
@@ -10204,15 +10248,19 @@ jQuery.proxy = function( fn, context ) {
 		fn = tmp;
 	}
 
+	// Quick check to determine if target is callable, in the spec
+	// this throws a TypeError, but we will just return undefined.
 	if ( !isFunction( fn ) ) {
 		return undefined;
 	}
 
+	// Simulated bind
 	args = slice.call( arguments, 2 );
 	proxy = function() {
 		return fn.apply( context || this, args.concat( slice.call( arguments ) ) );
 	};
 
+	// Set the guid of unique handler to the same of original handler, so it can be removed
 	proxy.guid = fn.guid = fn.guid || jQuery.guid++;
 
 	return proxy;
@@ -10237,11 +10285,33 @@ jQuery.now = Date.now;
 
 jQuery.isNumeric = function( obj ) {
 
+	// As of jQuery 3.0, isNumeric is limited to
+	// strings and numbers (primitives or objects)
+	// that can be coerced to finite numbers (gh-2662)
 	var type = jQuery.type( obj );
 	return ( type === "number" || type === "string" ) &&
 
+		// parseFloat NaNs numeric-cast false positives ("")
+		// ...but misinterprets leading-number strings, particularly hex literals ("0x...")
+		// subtraction forces infinities to NaN
 		!isNaN( obj - parseFloat( obj ) );
 };
+
+
+
+
+// Register as a named AMD module, since jQuery can be concatenated with other
+// files that may use define, but not via a proper concatenation script that
+// understands anonymous AMD modules. A named AMD is safest and most robust
+// way to register. Lowercase jquery is used because AMD module names are
+// derived from file names, and jQuery is normally delivered in a lowercase
+// file name. Do this after creating the global so that if an AMD module wants
+// to call noConflict to hide this version of jQuery, it will work.
+
+// Note that for maximum portability, libraries that are not jQuery should
+// declare themselves as anonymous modules, and avoid setting a global if an
+// AMD loader is present. jQuery is a special case. For more information, see
+// https://github.com/jrburke/requirejs/wiki/Updating-existing-libraries#wiki-anon
 
 if ( typeof define === "function" && define.amd ) {
 	define( "jquery", [], function() {
@@ -10254,8 +10324,10 @@ if ( typeof define === "function" && define.amd ) {
 
 var
 
+	// Map over jQuery in case of overwrite
 	_jQuery = window.jQuery,
 
+	// Map over the $ in case of overwrite
 	_$ = window.$;
 
 jQuery.noConflict = function( deep ) {
@@ -10270,9 +10342,15 @@ jQuery.noConflict = function( deep ) {
 	return jQuery;
 };
 
+// Expose jQuery and $ identifiers, even in AMD
+// (#7102#comment:10, https://github.com/jquery/jquery/pull/557)
+// and CommonJS for browser emulators (#13566)
 if ( !noGlobal ) {
 	window.jQuery = window.$ = jQuery;
 }
+
+
+
 
 return jQuery;
 } );
