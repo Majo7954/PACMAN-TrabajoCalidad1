@@ -117,7 +117,7 @@ let GF = function () {
 				}
 			
 				if (thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol) || soluciones.length === 3) {
-					let pos = Math.floor(Math.random() * soluciones.length);
+					let pos = Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * soluciones.length);
 					[this.velX, this.velY] = soluciones[pos];
 				} else {
 					thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);

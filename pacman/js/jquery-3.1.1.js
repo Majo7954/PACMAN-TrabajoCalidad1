@@ -2473,7 +2473,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				// We must always have either seed elements or outermost context
 				elems = seed || byElement && Expr.find["TAG"]( "*", outermost ),
 				// Use integer dirruns iff this is the outermost matcher
-				dirrunsUnique = (dirruns += contextBackup == null ? 1 : Math.random() || 0.1),
+				dirrunsUnique = (dirruns += contextBackup == null ? 1 : crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) || 0.1),
 				len = elems.length;
 
 			if ( outermost ) {
