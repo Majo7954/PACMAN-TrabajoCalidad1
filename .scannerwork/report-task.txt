@@ -2,5 +2,5 @@ projectKey=Solucionando-Pacman
 serverUrl=http://localhost:9000
 serverVersion=25.3.0.104237
 dashboardUrl=http://localhost:9000/dashboard?id=Solucionando-Pacman
-ceTaskId=cba9dd25-921f-4385-bb15-94edefdbb5df
-ceTaskUrl=http://localhost:9000/api/ce/task?id=cba9dd25-921f-4385-bb15-94edefdbb5df
+ceTaskId=ba4de094-1a16-4ea9-a541-ebb5f476d9cc
+ceTaskUrl=http://localhost:9000/api/ce/task?id=ba4de094-1a16-4ea9-a541-ebb5f476d9cc
