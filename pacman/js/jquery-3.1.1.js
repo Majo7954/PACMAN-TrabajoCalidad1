@@ -596,15 +596,13 @@ var i,
 
 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
 	rwhitespace = new RegExp( whitespace + "+", "g" ),
-	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
-
-	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
-	rcombinators = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*" ),
-
-	rattributeQuotes = new RegExp( "=" + whitespace + "*([^\\]'\"]*?)" + whitespace + "*\\]", "g" ),
-
+	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*?)" + whitespace + "+$", "g" ), // Agregar "?" para evitar backtracking excesivo
+	rcomma = new RegExp( "^" + whitespace + "*,?" + whitespace + "*" ), // Agregar "?" para limitar backtracking
+	rcombinators = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")?" + whitespace + "*" ), // Agregar "?" después de operadores
+	rattributeQuotes = new RegExp( "=" + whitespace + "*([^\\]'\"]*?)?" + whitespace + "*\\]", "g" ), // Agregar "?" para evitar evaluaciones innecesarias
 	rpseudo = new RegExp( pseudos ),
 	ridentifier = new RegExp( "^" + identifier + "$" ),
+
 
 	matchExpr = {
 		"ID": new RegExp( "^#(" + identifier + ")" ),
