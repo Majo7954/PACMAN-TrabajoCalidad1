@@ -141,7 +141,7 @@ var
 
 	// Support: Android <=4.0 only
 	// Make sure we trim BOM and NBSP
-	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+	rtrim = /^\s+|\s+$/g;
 
 jQuery.fn = jQuery.prototype = {
 
@@ -595,12 +595,11 @@ var i,
 		")\\)|)",
 
 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
-	rwhitespace = /\s+/g,  // Optimización directa
-rtrim = new RegExp( "^\\s+|((?:^|[^\\\\])(?:\\\\.)*?)\\s+$", "g" ),  // Evitar backtracking excesivo
-
-rcomma = /^\s*,\s*/,  // Sin necesidad de `+` innecesarios
-rcombinators = /^\s*([>+~]|\s)\s*/,  // Simplificación sin `?`
-rattributeQuotes = new RegExp( "=[\s]*([^\\]'\"]*?)\s*\\]", "g" ),  // Corrección en `[`
+	rwhitespace = /\s+/g,
+rtrim = new RegExp( "^\\s+|((?:^|[^\\\\])(?:\\\\.)*?)\\s+$", "g" ),
+rcomma = /^\s*,?\s*/,
+rcombinators = /^\s*([>+~]|\s)?\s*/,
+rattributeQuotes = /=\s*([^\\]'\"]*)\s*\]/g,
 rpseudo = new RegExp( pseudos ),
 ridentifier = new RegExp( "^" + identifier + "$" ),
 
