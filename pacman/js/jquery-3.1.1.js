@@ -787,8 +787,8 @@ function Sizzle( selector, context, results, seed ) {
 
 			// Take advantage of querySelectorAll
 			if ( support.qsa &&
-				!compilerCache[ selector + " " ] &&
-				(!rbuggyQSA || !rbuggyQSA.test( selector )) ) {
+				!compilerCache?.[selector + " "] &&
+				!rbuggyQSA?.test(selector) ) {				
 
 				if ( nodeType !== 1 ) {
 					newContext = context;
@@ -799,12 +799,13 @@ function Sizzle( selector, context, results, seed ) {
 				// Support: IE <=8
 				// Exclude object elements
 				} else if ( context.nodeName.toLowerCase() !== "object" ) {
-
-					// Capture the context ID, setting it first if necessary
-					if ( (nid = context.getAttribute( "id" )) ) {
+					// Captura el ID del contexto antes de la condición
+					nid = context.getAttribute("id");				
+					if (nid) { 
 						nid = nid.replace( rcssescape, fcssescape );
 					} else {
-						context.setAttribute( "id", (nid = expando) );
+						nid = expando;
+						context.setAttribute("id", nid);
 					}
 
 					// Prefix every selector in the list
@@ -852,11 +853,14 @@ function createCache() {
 
 	function cache( key, value ) {
 		// Use (key + " ") to avoid collision with native prototype properties (see Issue #157)
-		if ( keys.push( key + " " ) > Expr.cacheLength ) {
+		if (keys.push(key + " ") > Expr.cacheLength) {
 			// Only keep the most recent entries
-			delete cache[ keys.shift() ];
+			delete cache[keys.shift()];
 		}
-		return (cache[ key + " " ] = value);
+		// Extraemos la asignación antes del return para mayor claridad
+		cache[key + " "] = value;
+		return cache[key + " "];
+		
 	}
 	return cache;
 }
