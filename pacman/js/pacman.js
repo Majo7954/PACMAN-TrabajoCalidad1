@@ -33,7 +33,7 @@ let GF = function () {
 	ghostcolor[5] = "rgba(255, 255, 255, 255)"; // white, flashing ghost
 
 	// hold ghost objects
-	let ghosts = {};
+	let ghosts = [];
 
 	let Ghost = function (id, ctx) {
 
