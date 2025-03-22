@@ -2,5 +2,5 @@ projectKey=Juego-Calidad-Merge
 serverUrl=http://localhost:9000
 serverVersion=25.3.0.104237
 dashboardUrl=http://localhost:9000/dashboard?id=Juego-Calidad-Merge
-ceTaskId=b9906b3c-31a3-4b5a-8467-76c5ad5f4af4
-ceTaskUrl=http://localhost:9000/api/ce/task?id=b9906b3c-31a3-4b5a-8467-76c5ad5f4af4
+ceTaskId=aa71fcb5-daff-43dc-b716-b5d96b54bbb8
+ceTaskUrl=http://localhost:9000/api/ce/task?id=aa71fcb5-daff-43dc-b716-b5d96b54bbb8
