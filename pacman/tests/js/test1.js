@@ -14,8 +14,8 @@ var GF = function(){
 
 		// test1
 		// Tu código aquí
-    	var rndX = Math.floor(Math.random() * w);
-		var rndY = Math.floor(Math.random() * h);
+		var rndX = Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * w);
+        var rndY = Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * h);
 		ctx.beginPath();
 		ctx.arc(rndX,rndY,5,0,2*Math.PI, true);
 		ctx.fillStyle = 'green';

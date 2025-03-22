@@ -141,7 +141,7 @@ var
 
 	// Support: Android <=4.0 only
 	// Make sure we trim BOM and NBSP
-	rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+	rtrim = /^[^\S\r\n]+|[^\S\r\n]+$/g;
 
 jQuery.fn = jQuery.prototype = {
 
@@ -296,7 +296,7 @@ jQuery.extend = jQuery.fn.extend = function() {
 jQuery.extend( {
 
 	// Unique for each copy of jQuery on the page
-	expando: "jQuery" + ( version + Math.random() ).replace( /\D/g, "" ),
+	expando: "jQuery" + ( version + crypto.getRandomValues(new Uint32Array(1))[0] ),
 
 	// Assume jQuery is ready without the ready module
 	isReady: true,
@@ -595,16 +595,14 @@ var i,
 		")\\)|)",
 
 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
-	rwhitespace = new RegExp( whitespace + "+", "g" ),
-	rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
+	rwhitespace = /\s+/g,
+rtrim = new RegExp( "^\\s+|((?:^|[^\\\\])(?:\\\\.)*?)\\s+$", "g" ),
+rcomma = /^\s*,?\s*/,
+rcombinators = /^\s*([>+~]|\s)?\s*/,
+rattributeQuotes = /=\s*([^\\]'\"]*)\s*\]/g,
+rpseudo = new RegExp( pseudos ),
+ridentifier = new RegExp( "^" + identifier + "$" ),
 
-	rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
-	rcombinators = new RegExp( "^" + whitespace + "*([>+~]|" + whitespace + ")" + whitespace + "*" ),
-
-	rattributeQuotes = new RegExp( "=" + whitespace + "*([^\\]'\"]*?)" + whitespace + "*\\]", "g" ),
-
-	rpseudo = new RegExp( pseudos ),
-	ridentifier = new RegExp( "^" + identifier + "$" ),
 
 	matchExpr = {
 		"ID": new RegExp( "^#(" + identifier + ")" ),
@@ -789,8 +787,8 @@ function Sizzle( selector, context, results, seed ) {
 
 			// Take advantage of querySelectorAll
 			if ( support.qsa &&
-				!compilerCache[ selector + " " ] &&
-				(!rbuggyQSA || !rbuggyQSA.test( selector )) ) {
+				!compilerCache?.[selector + " "] &&
+				!rbuggyQSA?.test(selector) ) {				
 
 				if ( nodeType !== 1 ) {
 					newContext = context;
@@ -801,12 +799,13 @@ function Sizzle( selector, context, results, seed ) {
 				// Support: IE <=8
 				// Exclude object elements
 				} else if ( context.nodeName.toLowerCase() !== "object" ) {
-
-					// Capture the context ID, setting it first if necessary
-					if ( (nid = context.getAttribute( "id" )) ) {
+					// Captura el ID del contexto antes de la condición
+					nid = context.getAttribute("id");				
+					if (nid) { 
 						nid = nid.replace( rcssescape, fcssescape );
 					} else {
-						context.setAttribute( "id", (nid = expando) );
+						nid = expando;
+						context.setAttribute("id", nid);
 					}
 
 					// Prefix every selector in the list
@@ -854,11 +853,14 @@ function createCache() {
 
 	function cache( key, value ) {
 		// Use (key + " ") to avoid collision with native prototype properties (see Issue #157)
-		if ( keys.push( key + " " ) > Expr.cacheLength ) {
+		if (keys.push(key + " ") > Expr.cacheLength) {
 			// Only keep the most recent entries
-			delete cache[ keys.shift() ];
+			delete cache[keys.shift()];
 		}
-		return (cache[ key + " " ] = value);
+		// Extraemos la asignación antes del return para mayor claridad
+		cache[key + " "] = value;
+		return cache[key + " "];
+		
 	}
 	return cache;
 }
@@ -2475,7 +2477,7 @@ function matcherFromGroupMatchers( elementMatchers, setMatchers ) {
 				// We must always have either seed elements or outermost context
 				elems = seed || byElement && Expr.find["TAG"]( "*", outermost ),
 				// Use integer dirruns iff this is the outermost matcher
-				dirrunsUnique = (dirruns += contextBackup == null ? 1 : Math.random() || 0.1),
+				dirrunsUnique = (dirruns += contextBackup == null ? 1 : crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) || 0.1),
 				len = elems.length;
 
 			if ( outermost ) {

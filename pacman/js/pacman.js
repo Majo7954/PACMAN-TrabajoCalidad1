@@ -1,12 +1,12 @@
+//PROY PACMAN
 // Variables globales de utilidad
 let canvas = document.querySelector("canvas");
 let ctx = canvas.getContext("2d");
 let w = canvas.width;
 let h = canvas.height;
-var oldDirecrion = "right"; // Esta variable nos permitirá en caso de que Pacman quisiera cambiar de dirección y que no se pueda, seguir por la misma dirección
-// Se ha inicializado a right, porque pacman empieza moviendose hacia la derecha
+let oldDirection = "right"; // Se ha inicializado a "right" porque Pacman empieza moviéndose hacia la derecha
 
-// Incializar las variables de las puntuaciones
+// Inicializar las variables de las puntuaciones
 let puntos_comer_pildora = 10;
 let comer_fantasmas = 100;
 
@@ -34,7 +34,7 @@ let GF = function () {
 	ghostcolor[5] = "rgba(255, 255, 255, 255)"; // white, flashing ghost
 
 	// hold ghost objects
-	let ghosts = {};
+	let ghosts = [];
 
 	let Ghost = function (id, ctx) {
 
@@ -105,26 +105,29 @@ let GF = function () {
 			this.nearestRow = parseInt((this.y + thisGame.TILE_HEIGHT / 2) / thisGame.TILE_HEIGHT);
 			this.nearestCol = parseInt((this.x + thisGame.TILE_WIDTH / 2) / thisGame.TILE_WIDTH);
 
+			
 			if (this.state !== Ghost.SPECTACLES) {
 
 				let posiblesMovimientos = [[0, -this.speed], [this.speed, 0], [0, this.speed], [-this.speed, 0]];
 				let soluciones = [];
-
-				for (let i = 0; i < posiblesMovimientos.length; i++) {
-					if (!thisLevel.checkIfHitWall(this.x + posiblesMovimientos[i][0], this.y + posiblesMovimientos[i][1], this.nearestRow, this.nearestCol))
-						soluciones.push(posiblesMovimientos[i]);
+			
+				for (const movimiento of posiblesMovimientos) {
+					if (!thisLevel.checkIfHitWall(this.x + movimiento[0], this.y + movimiento[1], this.nearestRow, this.nearestCol)) {
+						soluciones.push(movimiento);
+					}
 				}
-
+			
 				if (thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol) || soluciones.length === 3) {
-					let pos = Math.round(Math.random() * (soluciones.length - 1));
-					this.velX = soluciones[pos][0];
-					this.velY = soluciones[pos][1];
-				} else
+					let pos = Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xFFFFFFFF + 1) * soluciones.length);
+					[this.velX, this.velY] = soluciones[pos];
+				} else {
 					thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
+				}
+			
 				this.x += this.velX;
 				this.y += this.velY;
-
-			} else {
+			}
+			else {
 				if(this.x < this.homeX) this.x += this.speed;
 				if(this.x > this.homeX) this.x -= this.speed;
 				if(this.y < this.homeY) this.y += this.speed;
@@ -324,14 +327,13 @@ let GF = function () {
 								thisLevel.pellets--;
 								console.log(thisLevel.pellets);
 								thisGame.addToScore(puntos_comer_pildora);
-								// let sound_eat_pellet = new Audio('../res/sounds/pacman_eatpill.wav');
-								thisGame.sound_eat_pellet.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
-								if (thisLevel.pellets == 0) {
+								thisGame.sound_eat_pellet.play(); 
+							
+								if (thisLevel.pellets === 0) {
 									console.log("Has ganado");
 									thisGame.setMode(thisGame.WIN);
-									// let sound_win = new Audio('../res/sounds/pacman_beginning.wav');
-									thisGame.sound_win.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
-								}
+									thisGame.sound_win.play();
+								} 
 							} else if (valor === tileID['pellet-power']) {
 								thisLevel.setMapTile(r, c, 0);
 								// let sound_eat_pellet = new Audio('../res/sounds/pacman_eatfruit.wav');
@@ -387,47 +389,53 @@ let GF = function () {
 	};
 
 	Pacman.prototype.move = function () {
-		this.nearestRow = parseInt((this.y) / thisGame.TILE_HEIGHT);
-		this.nearestCol = parseInt((this.x) / thisGame.TILE_WIDTH);
+    this.nearestRow = Math.trunc(this.y / thisGame.TILE_HEIGHT);
+    this.nearestCol = Math.trunc(this.x / thisGame.TILE_WIDTH);
 
-		if (!thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol)) {
-			thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
-			for (let i = 0; i < numGhosts; i++) {
-				if (thisLevel.checkIfHit(this.x, this.y, ghosts[i].x, ghosts[i].y, thisGame.TILE_WIDTH / 2)) {
-					if (ghosts[i].state === Ghost.VULNERABLE) {
-						ghosts[i].velX = ghosts[i].velY = 0;
-						ghosts[i].state = Ghost.SPECTACLES;
-						thisGame.addToScore(comer_fantasmas);
+    if (thisLevel.checkIfHitWall(this.x + this.velX, this.y + this.velY, this.nearestRow, this.nearestCol)) {
+        this.velX = 0;
+        this.velY = 0;
+        return;
+    }
 
-						// let sound_eat_ghost = new Audio('../res/sounds/pacman_eatghost.wav');
-						thisGame.sound_eat_ghost.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
+    thisLevel.checkIfHitSomething(this, this.x, this.y, this.nearestRow, this.nearestCol);
+    this.checkCollisionWithGhosts();
 
-					} else if (ghosts[i].state === Ghost.NORMAL){
-						thisGame.lives--; // Quitamos una vida
-						if (thisGame.lives > 0) {
-							// let sound_die = new Audio('../res/sounds/pacman_death.wav');
-							thisGame.sound_die.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
+    this.x += this.velX;
+    this.y += this.velY;
+};
 
-							thisGame.setMode(thisGame.HIT_GHOST);
-						} else {
-							// let sound_lose = new Audio('../res/sounds/pacman_intermission.wav');
-							thisGame.sound_lose.play(); // si falla, descomentar arriba y borrar la declaracion de la 470 aprox
+Pacman.prototype.checkCollisionWithGhosts = function () {
+    for (let ghost of ghosts) {
+        if (!thisLevel.checkIfHit(this.x, this.y, ghost.x, ghost.y, thisGame.TILE_WIDTH / 2)) continue;
 
-							thisGame.lives = 0;
-							thisGame.setMode(thisGame.GAME_OVER);
-						}
-					}
-				}
-			}
-			this.x += this.velX;
-			this.y += this.velY;
-		} else {
-			this.velX = 0;
-			this.velY = 0;
-		}
-		//thisLevel.checkIfHitSomething(this.x, this.y, this.nearestRow, this.nearestCol);
+        if (ghost.state === Ghost.VULNERABLE) {
+            this.handleGhostEaten(ghost);
+        } else if (ghost.state === Ghost.NORMAL) {
+            this.handlePacmanHit();
+        }
+    }
+};
 
-	};
+Pacman.prototype.handleGhostEaten = function (ghost) {
+    ghost.velX = 0;
+    ghost.velY = 0;
+    ghost.state = Ghost.SPECTACLES;
+    thisGame.addToScore(comer_fantasmas);
+    thisGame.sound_eat_ghost.play(); // Si falla, descomentar arriba y borrar la declaración en la línea 470 aprox.
+};
+
+Pacman.prototype.handlePacmanHit = function () {
+    thisGame.lives--;
+    if (thisGame.lives > 0) {
+        thisGame.sound_die.play();
+        thisGame.setMode(thisGame.HIT_GHOST);
+    } else {
+        thisGame.sound_lose.play();
+        thisGame.lives = 0;
+        thisGame.setMode(thisGame.GAME_OVER);
+    }
+};
 
 	// Función para pintar el Pacman
 	Pacman.prototype.draw = function () {
@@ -528,10 +536,11 @@ let GF = function () {
 	let clearCanvas = function () {
 		ctx.clearRect(0, 0, w, h);
 	};
-
+	
 	let checkInputs = function () {
-		var fila = Math.trunc(player.y / thisGame.TILE_HEIGHT);
-        var colum = Math.trunc(player.x / thisGame.TILE_WIDTH);
+		let fila = Math.trunc(player.y / thisGame.TILE_HEIGHT);
+		let colum = Math.trunc(player.x / thisGame.TILE_WIDTH);
+	
 		if (inputStates.left) {
 			// Si no ha chocado con nada, cambiar los valores para que se desplace a la izquierda
 			if (!thisLevel.checkIfHitWall(player.x - (thisGame.TILE_WIDTH / 2) - 1, player.y, fila, colum)) {
@@ -540,7 +549,6 @@ let GF = function () {
 				player.velX = -player.speed;
 				inputStates.up = false;
 				inputStates.down = false;
-				inputStates.right = false;
 			}
 
 		} else if (inputStates.up) {
@@ -583,117 +591,89 @@ let GF = function () {
 	};
 
 	let updateTimers = function () {
-		/*if (thisGame.ghostTimer > 1) {
-            thisGame.ghostTimer -= 1;
-        } else if (thisGame.ghostTimer == 1) {
-            thisGame.ghostTimer = 0;
-            /*for (let ghost in ghosts) {
-                ghost.state = Ghost.NORMAL; }
-            Mismo warning de antes: Value assigned to primitive will be lost, y no funciona */
-		/*for (let i = 0; i < numGhosts; i++) {
-            ghosts[i].state = Ghost.NORMAL;
-        }
-    }*/
-
-		let vulnerables = false;
-		for (let i = 0; i < numGhosts; i++) {
-			if(ghosts[i].state === Ghost.VULNERABLE) vulnerables = true;
-		}
-
-		if(vulnerables) {
-			if(thisGame.ghostTimer > 0) {
-				thisGame.ghostTimer--;
-			} else {
-				for (let i = 0; i < numGhosts; i++){
-					if(ghosts[i].state !== Ghost.SPECTACLES) { // Si pacman se ha comido al fantasma, primero tiene que volver a casa
-						ghosts[i].state = Ghost.NORMAL;
-					}
+		let vulnerables = ghosts.some(ghost => ghost.state === Ghost.VULNERABLE);
+	
+		if (vulnerables && thisGame.ghostTimer > 0) {
+			thisGame.ghostTimer--;
+		} else if (vulnerables && thisGame.ghostTimer === 0) {
+			ghosts.forEach(ghost => {
+				if (ghost.state !== Ghost.SPECTACLES) {
+					ghost.state = Ghost.NORMAL;
 				}
-			}
+			});
 		}
-
-
-		if(thisGame.mode === thisGame.HIT_GHOST) {
-			thisGame.modeTimer++;
-			if(thisGame.modeTimer >= 90) {
+	
+		handleGameMode();
+	};
+	
+	let handleGameMode = function () {
+		if (thisGame.mode === thisGame.HIT_GHOST) {
+			if (++thisGame.modeTimer >= 90) {
 				thisGame.setMode(thisGame.WAIT_TO_START);
 				reset();
 			}
-		}
-
-		if(thisGame.mode === thisGame.WAIT_TO_START) {
-			thisGame.modeTimer++;
-			if(thisGame.modeTimer >= 30) {
-				thisGame.setMode(thisGame.NORMAL);
-			}
+		} else if (thisGame.mode === thisGame.WAIT_TO_START && ++thisGame.modeTimer >= 30) {
+			thisGame.setMode(thisGame.NORMAL);
 		}
 	};
 
-	let mainLoop = function(time) {
-
-		// Cuando el juego esté en marcha
-		if (thisGame.mode !== thisGame.GAME_OVER && thisGame.mode !== thisGame.WIN && thisGame.mode !== thisGame.PAUSE) {
-
+	let mainLoop = function (time) {
+		if (isGameRunning()) {
 			measureFPS(time);
-
-			// En caso de que no haya pasado nada
-			if (thisGame.mode === thisGame.NORMAL) {
-				checkInputs();
-
-				// Mover fantasmas
-				for (let i = 0; i < numGhosts; i++) {
-					ghosts[i].move();
-				}
-
-				player.move();
-			}
-
-			// Pacman ha chocado con los fantasmas
-			if (thisGame.mode === thisGame.HIT_GHOST) {
-				if (thisGame.modeTimer == 90) {
-					thisGame.mode = thisGame.WAIT_TO_START;
-				}
-			}
-
-			// en modo WAIT_TO_START
-			if (thisGame.mode === thisGame.WAIT_TO_START) {
-				reset();
-				if (thisGame.modeTimer == 30) {
-					requestAnimationFrame(mainLoop);
-				}
-			}
-
-			// Clear the canvas
-			clearCanvas();
-
-			thisLevel.drawMap();
-
-			// Pintar fantasmas
-			for (let i = 0; i < numGhosts; i++) {
-				ghosts[i].draw();
-			}
-
-			player.draw();
-
-			updateTimers();
-			// call the animation loop every 1/60th of second
+			updateGame();
+			renderGame();
 			requestAnimationFrame(mainLoop);
-
-		} else if (thisGame.mode === thisGame.GAME_OVER || thisGame.mode === thisGame.WIN) { // En caso de que el juego haya terminado
-
-			// Clear the canvas
-			clearCanvas();
-
-			thisLevel.drawMap();
-
-			// Pintar fantasmas
-			for (let i = 0; i < numGhosts; i++) {
-				ghosts[i].draw();
-			}
-
-			player.draw();
-
+		} else {
+			endGame();
 		}
+	};
+	
+	function isGameRunning() {
+		return thisGame.mode !== thisGame.GAME_OVER && 
+			   thisGame.mode !== thisGame.WIN && 
+			   thisGame.mode !== thisGame.PAUSE;
+	}
+	
+	function updateGame() {
+		if (thisGame.mode === thisGame.NORMAL) {
+			checkInputs();
+			moveGhosts();
+			player.move();
+		} else if (thisGame.mode === thisGame.HIT_GHOST && thisGame.modeTimer === 90) {
+			thisGame.mode = thisGame.WAIT_TO_START;
+		} else if (thisGame.mode === thisGame.WAIT_TO_START) {
+			reset();
+			if (thisGame.modeTimer === 30) {
+				requestAnimationFrame(mainLoop);
+			}
+		}
+		updateTimers();
+	}
+	
+	function moveGhosts() {
+		for (let ghost of ghosts) {
+			ghost.move();
+		}
+	}
+	
+	function renderGame() {
+		clearCanvas();
+		thisLevel.drawMap();
+		drawGhosts();
+		player.draw();
+	}
+	
+	function drawGhosts() {
+		for (let ghost of ghosts) {
+			ghost.draw();
+		}
+	}
+	
+	function endGame() {
+		clearCanvas();
+		thisLevel.drawMap();
+		drawGhosts();
+		player.draw();
 	}
 
 	let addListeners = function () {
