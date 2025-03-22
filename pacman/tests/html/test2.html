@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en"> 
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title></title>
@@ -8,10 +8,9 @@
   <meta name="googlebot" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-
   <script type="text/javascript" src="/js/lib/dummy.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="/css/result-light.css">
+  <link rel="stylesheet" type="text/css" href="/css/result-light.css">
 
     <script 
     type="text/javascript" 
@@ -28,25 +27,22 @@
 </script>
 
   <style id="compiled-css" type="text/css">
-      #canvas {
-    border:1px solid #000000;
-}
+    #canvas {
+      border:1px solid #000000;
+    }
 
-    /* EOS */
   </style>
 
   <script id="insert"></script>
-
-
 </head>
 <body>
-    <canvas id="canvas" width="150" height="150"></canvas>
-<div id="qunit"></div>
+  <canvas id="canvas" width="150" height="150"></canvas>
+  <div id="qunit"></div>
 
-<script src="../js/test2.js"></script>
+  <script src="../js/test2.js"></script>
 
   <script>
-    // tell the embed parent frame the height of the content
+  
     if (window.parent && window.parent.parent){
       window.parent.parent.postMessage(["resultsFrame", {
         height: document.body.getBoundingClientRect().height,
@@ -54,10 +50,7 @@
       }], "*")
     }
 
-    // always overwrite window.name, in case users try to set it manually
     window.name = "result"
   </script>
-
-
 </body>
 </html>
